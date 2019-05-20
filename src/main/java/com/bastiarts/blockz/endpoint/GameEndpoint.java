@@ -5,25 +5,32 @@
  */
 package com.bastiarts.blockz.endpoint;
 
+import com.bastiarts.blockz.repository.BlockzRepo;
+import com.bastiarts.blockz.util.ConsoleColor;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 
 
-@ServerEndpoint("/echo")
+@ServerEndpoint("/blockz")
 public class GameEndpoint {
+    private BlockzRepo repo = BlockzRepo.getInstance();
 
     @OnOpen
     public void onOpen(Session session) throws IOException {
-        //session.getBasicRemote().sendText("Server: onOpen");
-        System.out.println("Server: Connection opened...");
+        System.out.println(ConsoleColor.yellow() + session.getId() + ConsoleColor.green() + " connected" + ConsoleColor.reset());
     }
 
     @OnMessage
-    public String echo(String message) {
-        System.out.println("Server: Message received: >" + message + "<");
-        // send echo to client
-        return message;
+    public void handleRequests(String request, Session session) {
+        try {
+            this.repo.handleRequest(new JSONObject(request), session);
+        } catch (JSONException e) {
+            System.out.println(ConsoleColor.SERVER + "Invalid JSON Format!");
+        }
     }
 
     @OnError
@@ -33,6 +40,6 @@ public class GameEndpoint {
 
     @OnClose
     public void onClose(Session session) {
-        System.out.println("Server: Connection closed...");
+        System.out.println(ConsoleColor.SERVER + session.getId() + " Connection closed...");
     }
 }

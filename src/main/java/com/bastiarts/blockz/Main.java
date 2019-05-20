@@ -1,7 +1,7 @@
 package com.bastiarts.blockz;
 
 /**
- * @author H. Lackinger
+ * @author BastiArts
  */
 
 import com.bastiarts.blockz.endpoint.GameEndpoint;
