@@ -5,6 +5,7 @@
  */
 package com.bastiarts.blockz.endpoint;
 
+import com.bastiarts.blockz.entities.BlockzUser;
 import com.bastiarts.blockz.repository.BlockzRepo;
 import com.bastiarts.blockz.util.ConsoleColor;
 import org.json.JSONException;
@@ -21,6 +22,7 @@ public class GameEndpoint {
 
     @OnOpen
     public void onOpen(Session session) throws IOException {
+        this.repo.addUser(new BlockzUser(session));
         System.out.println(ConsoleColor.yellow() + session.getId() + ConsoleColor.green() + " connected" + ConsoleColor.reset());
     }
 
@@ -40,6 +42,7 @@ public class GameEndpoint {
 
     @OnClose
     public void onClose(Session session) {
+        this.repo.removeUser(session);
         System.out.println(ConsoleColor.SERVER + session.getId() + " Connection closed...");
     }
 }
