@@ -17,6 +17,7 @@ public class BlockzRepo {
     private static BlockzRepo instance = null;
     // To store all online Players
     private List<BlockzUser> users = Collections.synchronizedList(new ArrayList<BlockzUser>());
+    private List<Game> games = Collections.synchronizedList(new ArrayList<Game>());
 
     public static BlockzRepo getInstance() {
         if (instance == null) {
@@ -32,8 +33,16 @@ public class BlockzRepo {
                 case "createGame":
                     // TODO: ADD GAME CODE
                     // Example: {"type": "createGame", "game": "MyFirstGame"}
+                    this.games.add(new Game(request.getString("game")));
                     System.out.println(ConsoleColor.SERVER + ConsoleColor.green() + "Game " + request.getString("game").toUpperCase() + " successfully created.");
                     this.joinGame(session, new Game(request.getString("game")));
+                    break;
+                // Request for updating the Movement, Playerposition etc.
+                case "join":
+                    this.joinGame(session, new Game(request.getString("game")));
+                    break;
+                case "update":
+                    this.notifyToGame(null, "UPDATE");
                     break;
                 default:
                     break;
@@ -46,6 +55,15 @@ public class BlockzRepo {
                     break;
                 default:
                     break;
+            }
+        } else {
+            if (request.has("type") && request.getString("type").equalsIgnoreCase("getGames")) {
+                // SEND GAME
+                // {"type": "info", "games": ["ttt", "ttt"]}
+                JSONObject obj = new JSONObject();
+                obj.put("type", "info");
+                obj.put("games", this.games.toArray());
+                session.getAsyncRemote().sendText(obj.toString());
             }
         }
     }
@@ -60,6 +78,7 @@ public class BlockzRepo {
         this.users.removeIf(u -> u.getSession() == session);
     }
 
+    // Updates a User --> Sets the Username
     private void updateUser(Session session, String username) {
         for (BlockzUser bu : this.users) {
             if (bu.getSession() == session) {
