@@ -2,6 +2,7 @@ package com.bastiarts.blockz.repository;
 
 import com.bastiarts.blockz.entities.BlockzUser;
 import com.bastiarts.blockz.entities.Game;
+import com.bastiarts.blockz.entities.StatusMessage;
 import com.bastiarts.blockz.util.ConsoleColor;
 import org.json.JSONObject;
 
@@ -31,17 +32,34 @@ public class BlockzRepo {
         if (this.hasRequiredParams(request)) {
             switch (request.getString("type")) {
                 case "createGame":
-                    // TODO: ADD GAME CODE
                     // Example: {"type": "createGame", "game": "MyFirstGame"}
-                    this.games.add(new Game(request.getString("game")));
-                    System.out.println(ConsoleColor.SERVER + ConsoleColor.green() + "Game " + request.getString("game").toUpperCase() + " successfully created.");
-                    this.joinGame(session, new Game(request.getString("game")));
+                    if (this.games.size() > 0) {
+                        // Check if the Game already exists
+                        for (Game g : this.games) {
+                            if (!g.getGameID().equals(request.getString("game"))) {
+                                this.games.add(new Game(request.getString("game"))); // For status codes see StatusMessage class on the ClientSide
+                                this.sendStatusMessage(new StatusMessage(199, "Game successfully created"), session);
+                                System.out.println(ConsoleColor.SERVER + ConsoleColor.green() + "Game " + request.getString("game").toUpperCase() + " successfully created.");
+                                this.joinGame(session, new Game(request.getString("game")));
+                                this.refreshGameList(session);
+                            } else {
+                                this.sendStatusMessage(new StatusMessage(499, "Game already exists. Try another GameID"), session);
+                            }
+                        }
+                    } else {
+                        this.games.add(new Game(request.getString("game")));
+                        System.out.println(ConsoleColor.SERVER + ConsoleColor.green() + "Game " + request.getString("game").toUpperCase() + " successfully created.");
+                        this.joinGame(session, new Game(request.getString("game")));
+                        this.refreshGameList(session);
+                    }
+
                     break;
                 // Request for updating the Movement, Playerposition etc.
                 case "join":
                     this.joinGame(session, new Game(request.getString("game")));
                     break;
                 case "update":
+                    // TODO
                     this.notifyToGame(null, "UPDATE");
                     break;
                 default:
@@ -59,11 +77,8 @@ public class BlockzRepo {
         } else {
             if (request.has("type") && request.getString("type").equalsIgnoreCase("getGames")) {
                 // SEND GAME
-                // {"type": "info", "games": ["ttt", "ttt"]}
-                JSONObject obj = new JSONObject();
-                obj.put("type", "info");
-                obj.put("games", this.games.toArray());
-                session.getAsyncRemote().sendText(obj.toString());
+                // RESPONSE {"type": "info", "games": ["ttt", "ttt"]}
+                this.refreshGameList(session);
             }
         }
     }
@@ -140,5 +155,23 @@ public class BlockzRepo {
             default:
                 break;
         }
+    }
+
+    private void refreshGameList(Session session) {
+        JSONObject obj = new JSONObject();
+        obj.put("type", "games");
+        obj.put("games", this.games.toArray());
+        // session.getAsyncRemote().sendText(obj.toString());
+
+        // Broadcast to all Users without a Game
+        for (BlockzUser user : this.users) {
+            // if (!user.hasGame()) {
+            user.getSession().getAsyncRemote().sendText(obj.toString());
+            // }
+        }
+    }
+
+    private void sendStatusMessage(StatusMessage statusMessage, Session session) {
+        session.getAsyncRemote().sendText(new JSONObject().put("type", "status").put("code", statusMessage.getStatusCode()).put("message", statusMessage.getStatusMessage()).toString());
     }
 }
