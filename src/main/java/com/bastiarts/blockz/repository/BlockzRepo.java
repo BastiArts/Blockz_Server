@@ -10,6 +10,7 @@ import javax.websocket.Session;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 
 public class BlockzRepo {
@@ -18,7 +19,7 @@ public class BlockzRepo {
     private static BlockzRepo instance = null;
     // To store all online Players
     private List<BlockzUser> users = Collections.synchronizedList(new ArrayList<BlockzUser>());
-    private List<Game> games = Collections.synchronizedList(new ArrayList<Game>());
+    private List<Game> games = Collections.synchronizedList(new CopyOnWriteArrayList<Game>());
 
     public static BlockzRepo getInstance() {
         if (instance == null) {
@@ -90,7 +91,9 @@ public class BlockzRepo {
 
     // Deletes a User, if disconnected
     public void removeUser(Session session) {
+
         this.users.removeIf(u -> u.getSession() == session);
+        System.out.println("USERS: " + this.users.size());
     }
 
     // Updates a User --> Sets the Username
@@ -165,9 +168,9 @@ public class BlockzRepo {
 
         // Broadcast to all Users without a Game
         for (BlockzUser user : this.users) {
-            // if (!user.hasGame()) {
+            if (!user.hasGame()) {
             user.getSession().getAsyncRemote().sendText(obj.toString());
-            // }
+            }
         }
     }
 
