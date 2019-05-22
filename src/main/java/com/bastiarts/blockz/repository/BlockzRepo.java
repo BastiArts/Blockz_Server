@@ -89,9 +89,7 @@ public class BlockzRepo {
 
     // Deletes a User, if disconnected
     public void removeUser(Session session) {
-
         this.users.removeIf(u -> u.getSession() == session);
-        System.out.println("USERS: " + this.users.size());
     }
 
     // Updates a User --> Sets the Username
@@ -152,6 +150,7 @@ public class BlockzRepo {
                 }
                 break;
             case "UPDATE":
+                System.out.println(ConsoleColor.GAME + "DATA TO UPDATE");
                 break;
             default:
                 break;
