@@ -34,21 +34,19 @@ public class BlockzRepo {
             switch (request.getString("type")) {
                 case "createGame":
                     // Example: {"type": "createGame", "game": "MyFirstGame"}
-                    if (this.games.size() > 0) {
-                        // Check if the Game already exists
-                        for (Game g : this.games) {
-                            if (!g.getGameID().equals(request.getString("game"))) {
-                                this.games.add(new Game(request.getString("game"))); // For status codes see StatusMessage class on the ClientSide
-                                this.sendStatusMessage(new StatusMessage(199, "Game successfully created"), session);
-                                System.out.println(ConsoleColor.SERVER + ConsoleColor.green() + "Game " + request.getString("game").toUpperCase() + " successfully created.");
-                                this.joinGame(session, new Game(request.getString("game")));
-                                this.refreshGameList(session);
-                            } else {
-                                this.sendStatusMessage(new StatusMessage(499, "Game already exists. Try another GameID"), session);
-                            }
+                    // Check if the Game already exists
+                    boolean check = false;
+                    for (Game g : this.games) {
+                        if (g.getGameID().equals(request.getString("game"))) {
+                            check = true;
+                            break;
                         }
+                    }
+                    if (check) {
+                        this.sendStatusMessage(new StatusMessage(499, "Game already exists. Try another GameID"), session);
                     } else {
-                        this.games.add(new Game(request.getString("game")));
+                        this.games.add(new Game(request.getString("game"))); // For status codes see StatusMessage class on the ClientSide
+                        this.sendStatusMessage(new StatusMessage(199, "Game successfully created"), session);
                         System.out.println(ConsoleColor.SERVER + ConsoleColor.green() + "Game " + request.getString("game").toUpperCase() + " successfully created.");
                         this.joinGame(session, new Game(request.getString("game")));
                         this.refreshGameList(session);
@@ -169,7 +167,7 @@ public class BlockzRepo {
         // Broadcast to all Users without a Game
         for (BlockzUser user : this.users) {
             if (!user.hasGame()) {
-            user.getSession().getAsyncRemote().sendText(obj.toString());
+                user.getSession().getAsyncRemote().sendText(obj.toString());
             }
         }
     }
