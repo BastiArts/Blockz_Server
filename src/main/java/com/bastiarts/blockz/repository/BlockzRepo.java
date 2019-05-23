@@ -20,6 +20,7 @@ public class BlockzRepo {
     // To store all online Players
     private List<BlockzUser> users = Collections.synchronizedList(new ArrayList<BlockzUser>());
     private List<Game> games = Collections.synchronizedList(new CopyOnWriteArrayList<Game>());
+    private String[] colors = {"0xfeb74c", "0x1abc9c", "0x3b78a4"};
 
     public static BlockzRepo getInstance() {
         if (instance == null) {
@@ -59,7 +60,7 @@ public class BlockzRepo {
                     break;
                 case "update":
                     // TODO
-                    this.notifyToGame(null, "UPDATE");
+                    this.notifyToGame(null, "UPDATE", request);
                     break;
                 default:
                     break;
@@ -84,6 +85,9 @@ public class BlockzRepo {
 
     // Creates a new User and stores it
     public void addUser(BlockzUser user) {
+
+        user.setColor(this.colors[(int) Math.floor(Math.random() * colors.length)]);
+        System.out.println(user.getColor());
         this.users.add(user);
     }
 
@@ -97,7 +101,7 @@ public class BlockzRepo {
         for (BlockzUser bu : this.users) {
             if (bu.getSession() == session) {
                 bu.setUsername(username);
-                System.out.println(ConsoleColor.SERVER + "Username successful set! ");
+                System.out.println(ConsoleColor.SERVER + "Username successfully set! ");
             }
         }
     }
@@ -116,7 +120,7 @@ public class BlockzRepo {
         for (BlockzUser bu : this.users) {
             if (bu.getSession() == session) {
                 bu.setGame(game);
-                this.notifyToGame(bu, "JOIN");
+                this.notifyToGame(bu, "JOIN", null);
                 System.out.println(ConsoleColor.GAME + bu.getUsername() + " joined the Game " + ConsoleColor.yellow() + game.getGameID() + ConsoleColor.reset());
             }
         }
@@ -126,7 +130,7 @@ public class BlockzRepo {
      * @param user       - User
      * @param notifyType - Can be JOIN, LEAVE, Maybe CHAT and most important UPDATE (if a Block is placed)
      */
-    private void notifyToGame(BlockzUser user, String notifyType) {
+    private void notifyToGame(BlockzUser user, String notifyType, JSONObject request) {
         JSONObject obj = new JSONObject();
         switch (notifyType) {
             case "JOIN":
@@ -150,7 +154,13 @@ public class BlockzRepo {
                 }
                 break;
             case "UPDATE":
-                System.out.println(ConsoleColor.GAME + "DATA TO UPDATE");
+                if (request.get("players") != null && request.get("cubes") != null && request.get("game") != null) {
+                    for (BlockzUser bu : this.users) {
+                        if (bu.getGame().getGameID().equalsIgnoreCase(request.getString("game"))) {
+                            bu.getSession().getAsyncRemote().sendText(request.toString());
+                        }
+                    }
+                }
                 break;
             default:
                 break;

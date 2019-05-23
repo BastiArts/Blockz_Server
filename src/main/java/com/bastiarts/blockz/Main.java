@@ -17,7 +17,7 @@ public class Main {
     }
 
     public static void runServer() {
-        Server server = new Server("localhost", 8025, "/websockets", GameEndpoint.class);
+        Server server = new Server("0.0.0.0", 8025, "/websockets", GameEndpoint.class);
 
         try {
             server.start();

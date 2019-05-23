@@ -32,6 +32,7 @@ public class GameEndpoint {
             this.repo.handleRequest(new JSONObject(request), session);
         } catch (JSONException e) {
             System.out.println(ConsoleColor.SERVER + "Invalid JSON Format!");
+            e.printStackTrace();
         }
     }
 
