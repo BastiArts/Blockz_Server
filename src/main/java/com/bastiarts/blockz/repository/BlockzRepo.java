@@ -17,7 +17,7 @@ public class BlockzRepo {
 
     // Singleton
     private static BlockzRepo instance = null;
-    // To store all online Players
+    // To store all online Players & Games
     private List<BlockzUser> users = Collections.synchronizedList(new ArrayList<BlockzUser>());
     private List<Game> games = Collections.synchronizedList(new CopyOnWriteArrayList<Game>());
     private String[] colors = {"0xfeb74c", "0x1abc9c", "0x3b78a4"};
@@ -156,8 +156,10 @@ public class BlockzRepo {
             case "UPDATE":
                 if (request.get("players") != null && request.get("cubes") != null && request.get("game") != null) {
                     for (BlockzUser bu : this.users) {
-                        if (bu.getGame().getGameID().equalsIgnoreCase(request.getString("game"))) {
-                            bu.getSession().getAsyncRemote().sendText(request.toString());
+                        if (bu != null) {
+                            if (bu.getGame().getGameID().equalsIgnoreCase(request.getString("game"))) {
+                                bu.getSession().getAsyncRemote().sendText(request.toString());
+                            }
                         }
                     }
                 }
