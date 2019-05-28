@@ -34,4 +34,8 @@ public class DrawUser {
     public void setGame(DrawGame game) {
         this.game = game;
     }
+
+    public boolean hasGame() {
+        return this.game != null;
+    }
 }

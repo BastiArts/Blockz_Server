@@ -137,7 +137,7 @@ public class BlockzRepo {
                 for (BlockzUser bu : this.users) {
                     if (bu.getGame() == user.getGame()) {
                         obj.put("type", "info");
-                        obj.put("message", bu.getUsername() + " joined the Game.");
+                        obj.put("message", user.getUsername() + " joined the Game.");
                         bu.getSession().getAsyncRemote().sendText(obj.toString());
                         break;
                     }

@@ -8,15 +8,14 @@ import java.util.List;
 public class DrawLobbyRequest extends DrawRequest {
     private String lobbyID;
     private List<DrawUser> lobbyMembers = new ArrayList<>();
-
+    private Integer maxPlayers;
     public DrawLobbyRequest(String type) {
         super(type);
     }
 
-    public DrawLobbyRequest(String type, String lobbyID, List<DrawUser> lobbyMembers) {
+    public DrawLobbyRequest(String type, String lobbyID) {
         super(type);
         this.lobbyID = lobbyID;
-        this.lobbyMembers = lobbyMembers;
     }
 
     public String getLobbyID() {
@@ -33,5 +32,13 @@ public class DrawLobbyRequest extends DrawRequest {
 
     public void setLobbyMembers(List<DrawUser> lobbyMembers) {
         this.lobbyMembers = lobbyMembers;
+    }
+
+    public Integer getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public void setMaxPlayers(Integer maxPlayers) {
+        this.maxPlayers = maxPlayers;
     }
 }
