@@ -157,6 +157,7 @@ public class BlockzRepo {
                 if (request.get("players") != null && request.get("cubes") != null && request.get("game") != null) {
                     for (BlockzUser bu : this.users) {
                         if (bu != null) {
+                            System.out.println(request.getString("game"));
                             if (bu.getGame().getGameID().equalsIgnoreCase(request.getString("game"))) {
                                 bu.getSession().getAsyncRemote().sendText(request.toString());
                             }
