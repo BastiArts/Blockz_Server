@@ -1,23 +1,36 @@
 package com.bastiarts.blockz.entities.draw;
 
+import javax.websocket.Session;
+import java.util.ArrayList;
+import java.util.List;
+
 public class DrawGame {
-    private DrawUser host;
+    private String hostID;
     private String gameID;
     private int maxPlayers;
+    private List<DrawUser> players = new ArrayList<>();
+
+    public DrawGame(String gameID, int maxPlayers, Session host) {
+        this.gameID = gameID;
+        this.maxPlayers = maxPlayers;
+        this.hostID = host.getId();
+    }
+
+    public DrawGame(Session host, String gameID) {
+        this.hostID = host.getId();
+        this.gameID = gameID;
+    }
 
     public DrawGame(String gameID) {
         this.gameID = gameID;
     }
 
-    public DrawGame(String gameID, int maxPlayers, DrawUser host) {
-        this.gameID = gameID;
-        this.maxPlayers = maxPlayers;
-        this.host = host;
+    public List<DrawUser> getPlayers() {
+        return players;
     }
 
-    public DrawGame(DrawUser host, String gameID) {
-        this.host = host;
-        this.gameID = gameID;
+    public void setPlayers(List<DrawUser> players) {
+        this.players = players;
     }
 
     public String getGameID() {
@@ -37,11 +50,11 @@ public class DrawGame {
         this.maxPlayers = maxPlayers;
     }
 
-    public DrawUser getHost() {
-        return host;
+    public String getHostID() {
+        return hostID;
     }
 
-    public void setHost(DrawUser host) {
-        this.host = host;
+    public void setHostID(String host) {
+        this.hostID = host;
     }
 }

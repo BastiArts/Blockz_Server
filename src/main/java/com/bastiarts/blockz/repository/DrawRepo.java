@@ -124,21 +124,41 @@ public class DrawRepo {
         boolean exists = false;
         for (DrawGame dg : this.games) {
             if (dg.getGameID().equalsIgnoreCase(drl.getLobbyID())) {
+                this.sendStatusMessage(new StatusMessage(499, "Game creation failed"), session);
                 exists = true;
             }
         }
         if (!exists) {
-            this.games.add(new DrawGame(this.findUserBySession(session), drl.getLobbyID()));
+            DrawGame tmpGame = new DrawGame(session, drl.getLobbyID());
+
             this.sendStatusMessage(new StatusMessage(199, "Game successfully created"), session);
             System.out.println(ConsoleColor.SERVER + ConsoleColor.green() + "DRAW: Game " + drl.getLobbyID().toUpperCase() + " successfully created.");
             drl.getLobbyMembers().add(this.findUserBySession(session));
+            this.findUserBySession(session).setGame(new DrawGame(session, drl.getLobbyID()));
+            tmpGame.getPlayers().add(this.findUserBySession(session));
+            this.games.add(tmpGame);
+            this.refreshGameList(session);
+            this.notifyToGame(this.findUserBySession(session), "JOIN", null);
         } else {
             this.sendStatusMessage(new StatusMessage(499, "Game already exists. Try another GameID"), session);
         }
     }
 
+    private void refreshGameList(Session session) {
+        JSONObject obj = new JSONObject();
+        obj.put("type", "games");
+        obj.put("games", this.games.toArray());
+        // session.getAsyncRemote().sendText(obj.toString());
+
+        // Broadcast to all Users without a Game
+        for (DrawUser user : this.users) {
+            if (!user.hasGame()) {
+                user.getSession().getAsyncRemote().sendText(obj.toString());
+            }
+        }
+    }
     private void notifyToGame(DrawUser user, String notifyType, DrawRequest request) {
-        switch (notifyType) {
+        switch (notifyType.toUpperCase()) {
             case "JOIN":
                 for (DrawUser u : this.users) {
                     if (u.getSession() != user.getSession()) {
