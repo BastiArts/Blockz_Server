@@ -38,4 +38,5 @@ public class DrawUser {
     public boolean hasGame() {
         return this.game != null;
     }
+
 }

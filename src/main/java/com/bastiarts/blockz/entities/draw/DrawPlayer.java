@@ -6,5 +6,4 @@ public class DrawPlayer extends DrawUser {
     public DrawPlayer(Session session) {
         super(session);
     }
-
 }

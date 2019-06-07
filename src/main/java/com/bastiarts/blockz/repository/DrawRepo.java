@@ -40,7 +40,6 @@ public class DrawRepo {
         } else if (request instanceof DrawGameViewRequest) {
             // Broadcast all the available Games
             this.handleGameList((DrawGameViewRequest) request, session);
-
         }
     }
 
@@ -84,7 +83,13 @@ public class DrawRepo {
                 break;
             case "joinLobby":
                 DrawUser user = this.findUserBySession(session);
-                user.setGame(new DrawGame(drl.getLobbyID()));
+                for (DrawGame g : this.games) {
+                    if (g.getGameID().equalsIgnoreCase(drl.getLobbyID())) {
+                        user.setGame(g);
+                        break;
+                    }
+                }
+
                 // TODO Notify the join to others
                 this.notifyToGame(user, "JOIN", null);
                 System.out.println(ConsoleColor.GAME + user.getUsername() + " joined the Game " + ConsoleColor.yellow() + drl.getLobbyID() + ConsoleColor.reset());
@@ -107,13 +112,8 @@ public class DrawRepo {
 
     // -= GameList-Handler =-
     private void handleGameList(DrawGameViewRequest dgvr, Session session) {
+        this.refreshGameList(session);
 
-
-        for (DrawUser du : this.users) {
-            if (!du.hasGame()) {
-                du.getSession().getAsyncRemote().sendObject(dgvr);
-            }
-        }
     }
 
     private void sendStatusMessage(StatusMessage statusMessage, Session session) {
@@ -135,10 +135,11 @@ public class DrawRepo {
             System.out.println(ConsoleColor.SERVER + ConsoleColor.green() + "DRAW: Game " + drl.getLobbyID().toUpperCase() + " successfully created.");
             drl.getLobbyMembers().add(this.findUserBySession(session));
             this.findUserBySession(session).setGame(new DrawGame(session, drl.getLobbyID()));
-            tmpGame.getPlayers().add(this.findUserBySession(session));
+            DrawUser tmpU = this.findUserBySession(session);
             this.games.add(tmpGame);
             this.refreshGameList(session);
-            this.notifyToGame(this.findUserBySession(session), "JOIN", null);
+            tmpU.setGame(tmpGame);
+            this.notifyToGame(tmpU, "JOIN", null);
         } else {
             this.sendStatusMessage(new StatusMessage(499, "Game already exists. Try another GameID"), session);
         }
@@ -163,7 +164,8 @@ public class DrawRepo {
                 for (DrawUser u : this.users) {
                     if (u.getSession() != user.getSession()) {
                         if (u.getGame() == user.getGame()) {
-                            u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "info").put("message", user.getUsername() + " joined the Game").toString());
+                            //  u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("username", user.getUsername()).put("sessionID", user.getSession().getId()).put("game", user.getGame().getGameID()).toString());
+                            u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(user.getGame()).toString()).toString());
                         }
                     }
                 }

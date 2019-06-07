@@ -1,14 +1,12 @@
 package com.bastiarts.blockz.entities.draw;
 
 import javax.websocket.Session;
-import java.util.ArrayList;
-import java.util.List;
 
 public class DrawGame {
     private String hostID;
     private String gameID;
     private int maxPlayers;
-    private List<DrawUser> players = new ArrayList<>();
+    //private List<DrawUser> players = new ArrayList<>();
 
     public DrawGame(String gameID, int maxPlayers, Session host) {
         this.gameID = gameID;
@@ -25,14 +23,15 @@ public class DrawGame {
         this.gameID = gameID;
     }
 
-    public List<DrawUser> getPlayers() {
-        return players;
-    }
+    /*
+        public List<DrawUser> getPlayers() {
+            return players;
+        }
 
-    public void setPlayers(List<DrawUser> players) {
-        this.players = players;
-    }
-
+        public void setPlayers(List<DrawUser> players) {
+            this.players = players;
+        }
+    */
     public String getGameID() {
         return gameID;
     }
