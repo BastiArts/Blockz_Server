@@ -29,6 +29,9 @@ public class DrawDecoder implements Decoder.Text<DrawRequest> {
             case "joinLobby":
                 request = new DrawLobbyRequest(jso.getString("type"), jso.getString("lobbyID"));
                 break;
+            case "leaveGame":
+                request = new DrawLobbyRequest(jso.getString("type"), jso.getString("lobbyID"));
+                break;
             default:
                 System.out.println("not Decode");
                 throw new DecodeException(s, "Could not decode!");

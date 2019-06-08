@@ -2,6 +2,7 @@ package com.bastiarts.blockz.repository;
 
 import com.bastiarts.blockz.entities.StatusMessage;
 import com.bastiarts.blockz.entities.draw.DrawGame;
+import com.bastiarts.blockz.entities.draw.DrawPlayer;
 import com.bastiarts.blockz.entities.draw.DrawUser;
 import com.bastiarts.blockz.entities.draw.Requests.*;
 import com.bastiarts.blockz.util.ConsoleColor;
@@ -48,7 +49,9 @@ public class DrawRepo {
     }
 
     public void removeUser(Session session) {
+        System.out.println(ConsoleColor.GAME + findUserBySession(session).getUsername() + ConsoleColor.red() + " left the Game " + ConsoleColor.yellow() + findUserBySession(session).getGameID() + ConsoleColor.reset());
         this.users.removeIf(u -> u.getSession() == session);
+        //this.notifyToGame(findUserBySession(session), "LEAVE", null);
     }
 
     private void updateUser(DrawLoginRequest dlr, Session s) {
@@ -59,6 +62,7 @@ public class DrawRepo {
                 System.out.println("Username set: " + dlr.getUsername());
             }
         }
+        s.getAsyncRemote().sendText(new JSONObject().put("receiveSession", s.getId()).toString());
     }
 
     private DrawUser findUserBySession(Session s) {
@@ -68,6 +72,15 @@ public class DrawRepo {
             }
         }
         return new DrawUser(s);
+    }
+
+    private DrawGame findGameByID(String gameID) {
+        for (DrawGame g : this.games) {
+            if (g.getGameID().equalsIgnoreCase(gameID)) {
+                return g;
+            }
+        }
+        return new DrawGame(gameID);
     }
 
     // -- REQUEST HANDLERS --
@@ -85,7 +98,8 @@ public class DrawRepo {
                 DrawUser user = this.findUserBySession(session);
                 for (DrawGame g : this.games) {
                     if (g.getGameID().equalsIgnoreCase(drl.getLobbyID())) {
-                        user.setGame(g);
+                        user.setGameID(g.getGameID());
+                        g.getPlayers().add(new DrawPlayer(user.getSession().getId(), user.getUsername()));
                         break;
                     }
                 }
@@ -93,6 +107,18 @@ public class DrawRepo {
                 // TODO Notify the join to others
                 this.notifyToGame(user, "JOIN", null);
                 System.out.println(ConsoleColor.GAME + user.getUsername() + " joined the Game " + ConsoleColor.yellow() + drl.getLobbyID() + ConsoleColor.reset());
+                break;
+            case "leaveGame":
+                DrawUser us = this.findUserBySession(session);
+                for (DrawGame g : this.games) {
+                    if (g.getGameID().equalsIgnoreCase(drl.getLobbyID())) {
+                        us.setGameID(g.getGameID());
+                        g.getPlayers().removeIf(p -> p.getSessionID().equalsIgnoreCase(session.getId()));
+                        break;
+                    }
+                }
+                this.notifyToGame(us, "LEAVE", null);
+                System.out.println(ConsoleColor.GAME + findUserBySession(session).getUsername() + ConsoleColor.red() + " left the Game " + ConsoleColor.yellow() + drl.getLobbyID() + ConsoleColor.reset());
                 break;
             default:
                 break;
@@ -134,11 +160,11 @@ public class DrawRepo {
             this.sendStatusMessage(new StatusMessage(199, "Game successfully created"), session);
             System.out.println(ConsoleColor.SERVER + ConsoleColor.green() + "DRAW: Game " + drl.getLobbyID().toUpperCase() + " successfully created.");
             drl.getLobbyMembers().add(this.findUserBySession(session));
-            this.findUserBySession(session).setGame(new DrawGame(session, drl.getLobbyID()));
             DrawUser tmpU = this.findUserBySession(session);
+            tmpGame.getPlayers().add(new DrawPlayer(tmpU.getSession().getId(), tmpU.getUsername()));
+            tmpU.setGameID(tmpGame.getGameID());
             this.games.add(tmpGame);
             this.refreshGameList(session);
-            tmpU.setGame(tmpGame);
             this.notifyToGame(tmpU, "JOIN", null);
         } else {
             this.sendStatusMessage(new StatusMessage(499, "Game already exists. Try another GameID"), session);
@@ -162,16 +188,33 @@ public class DrawRepo {
         switch (notifyType.toUpperCase()) {
             case "JOIN":
                 for (DrawUser u : this.users) {
-                    if (u.getSession() != user.getSession()) {
-                        if (u.getGame() == user.getGame()) {
+                    // if (u.getSession() != user.getSession()) {
+                    if (u.getGameID().equalsIgnoreCase(user.getGameID())) {
                             //  u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("username", user.getUsername()).put("sessionID", user.getSession().getId()).put("game", user.getGame().getGameID()).toString());
-                            u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(user.getGame()).toString()).toString());
+                        // u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(user.getGameID()).toString()).toString());
+                        u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(findGameByID(u.getGameID()))).toString());
                         }
-                    }
+                    //  }
                 }
+                break;
+            case "LEAVE":
+                for (DrawUser u : this.users) {
+                    // if (u.getSession() != user.getSession()) {
+                    if (u.getGameID().equalsIgnoreCase(user.getGameID())) {
+                        //  u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("username", user.getUsername()).put("sessionID", user.getSession().getId()).put("game", user.getGame().getGameID()).toString());
+                        // u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(user.getGameID()).toString()).toString());
+                        this.users.removeIf(us -> us.getSession() == user.getSession());
+                        u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(findGameByID(u.getGameID()))).toString());
+                    }
+                    //  }
+                }
+                this.users.removeIf(u -> u.getSession() == user.getSession());
+
+
                 break;
             default:
                 break;
         }
     }
+
 }

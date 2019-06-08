@@ -5,7 +5,7 @@ import javax.websocket.Session;
 public class DrawUser {
     private String username;
     private Session session;
-    private DrawGame game;
+    private String gameID;
 
     public DrawUser(Session session) {
         this.session = session;
@@ -27,16 +27,16 @@ public class DrawUser {
         this.session = session;
     }
 
-    public DrawGame getGame() {
-        return game;
+    public String getGameID() {
+        return gameID;
     }
 
-    public void setGame(DrawGame game) {
-        this.game = game;
+    public void setGameID(String gameID) {
+        this.gameID = gameID;
     }
 
     public boolean hasGame() {
-        return this.game != null;
+        return this.gameID != null;
     }
 
 }
