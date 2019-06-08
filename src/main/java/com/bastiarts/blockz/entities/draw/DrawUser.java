@@ -5,7 +5,7 @@ import javax.websocket.Session;
 public class DrawUser {
     private String username;
     private Session session;
-    private String gameID;
+    private String gameID = "";
 
     public DrawUser(Session session) {
         this.session = session;
@@ -36,7 +36,7 @@ public class DrawUser {
     }
 
     public boolean hasGame() {
-        return this.gameID != null;
+        return !this.gameID.equalsIgnoreCase("");
     }
 
 }

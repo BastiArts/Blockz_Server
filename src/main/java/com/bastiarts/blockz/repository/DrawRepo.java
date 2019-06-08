@@ -99,6 +99,8 @@ public class DrawRepo {
                 for (DrawGame g : this.games) {
                     if (g.getGameID().equalsIgnoreCase(drl.getLobbyID())) {
                         user.setGameID(g.getGameID());
+                        this.users.removeIf(u -> u.getSession() == user.getSession());
+                        this.users.add(user);
                         g.getPlayers().add(new DrawPlayer(user.getSession().getId(), user.getUsername()));
                         break;
                     }
@@ -128,7 +130,9 @@ public class DrawRepo {
 
     // -= Game-Handler =-
     private void handleGameRequests(DrawGameRequest dgr, Session session) {
-
+        if (dgr.getType().equalsIgnoreCase("startGame")) {
+            notifyToGame(findUserBySession(session), "START", null);
+        }
     }
 
     // -= Chat-Handler =-
@@ -163,6 +167,8 @@ public class DrawRepo {
             DrawUser tmpU = this.findUserBySession(session);
             tmpGame.getPlayers().add(new DrawPlayer(tmpU.getSession().getId(), tmpU.getUsername()));
             tmpU.setGameID(tmpGame.getGameID());
+            this.users.removeIf(u -> u.getSession() == tmpU.getSession());
+            this.users.add(tmpU);
             this.games.add(tmpGame);
             this.refreshGameList(session);
             this.notifyToGame(tmpU, "JOIN", null);
@@ -188,29 +194,26 @@ public class DrawRepo {
         switch (notifyType.toUpperCase()) {
             case "JOIN":
                 for (DrawUser u : this.users) {
-                    // if (u.getSession() != user.getSession()) {
                     if (u.getGameID().equalsIgnoreCase(user.getGameID())) {
-                            //  u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("username", user.getUsername()).put("sessionID", user.getSession().getId()).put("game", user.getGame().getGameID()).toString());
-                        // u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(user.getGameID()).toString()).toString());
                         u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(findGameByID(u.getGameID()))).toString());
                         }
-                    //  }
                 }
                 break;
             case "LEAVE":
                 for (DrawUser u : this.users) {
-                    // if (u.getSession() != user.getSession()) {
                     if (u.getGameID().equalsIgnoreCase(user.getGameID())) {
-                        //  u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("username", user.getUsername()).put("sessionID", user.getSession().getId()).put("game", user.getGame().getGameID()).toString());
-                        // u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(user.getGameID()).toString()).toString());
                         this.users.removeIf(us -> us.getSession() == user.getSession());
                         u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(findGameByID(u.getGameID()))).toString());
                     }
-                    //  }
                 }
                 this.users.removeIf(u -> u.getSession() == user.getSession());
-
-
+                break;
+            case "START":
+                for (DrawUser u : this.users) {
+                    if (u.getGameID().equalsIgnoreCase(user.getGameID())) {
+                        u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "start").toString());
+                    }
+                }
                 break;
             default:
                 break;

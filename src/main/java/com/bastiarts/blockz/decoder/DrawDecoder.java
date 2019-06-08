@@ -1,9 +1,6 @@
 package com.bastiarts.blockz.decoder;
 
-import com.bastiarts.blockz.entities.draw.Requests.DrawGameViewRequest;
-import com.bastiarts.blockz.entities.draw.Requests.DrawLobbyRequest;
-import com.bastiarts.blockz.entities.draw.Requests.DrawLoginRequest;
-import com.bastiarts.blockz.entities.draw.Requests.DrawRequest;
+import com.bastiarts.blockz.entities.draw.Requests.*;
 import org.json.JSONObject;
 
 import javax.websocket.DecodeException;
@@ -31,6 +28,8 @@ public class DrawDecoder implements Decoder.Text<DrawRequest> {
                 break;
             case "leaveGame":
                 request = new DrawLobbyRequest(jso.getString("type"), jso.getString("lobbyID"));
+            case "startGame":
+                request = new DrawGameRequest(jso.getString("type"));
                 break;
             default:
                 System.out.println("not Decode");
