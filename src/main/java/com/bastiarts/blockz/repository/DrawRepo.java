@@ -173,6 +173,12 @@ public class DrawRepo {
         for (DrawUser u : this.users) {
             if (u.getGameID().equalsIgnoreCase(findUserBySession(session).getGameID())) {
                 u.getSession().getAsyncRemote().sendObject(hcr);
+               /* if(hcr.getMessage().equalsIgnoreCase(this.findGameByID(findUserBySession(session).getGameID()).getTopic())){
+                    // Im DrawGame eine Variable Topic anlegen, die nach jeder Runde neu belegt wird. das Topic wird auch mitgeschickt.
+                    // Topic = das zu erratene Wort
+
+                    // WICHTIG!! DAS TOPIC NUR DEM DRAWER MITSCHICKEN (SERVERSIDE -> CLIENT)
+                }*/
             }
         }
     }
