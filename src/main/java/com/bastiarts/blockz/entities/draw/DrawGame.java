@@ -9,6 +9,8 @@ public class DrawGame {
     private String gameID;
     private int maxPlayers;
     private List<DrawPlayer> players = new ArrayList<>();
+    private String topic;
+    private String drawer; // SESSION ID
 
     public DrawGame(String gameID, int maxPlayers, Session host) {
         this.gameID = gameID;
@@ -56,5 +58,21 @@ public class DrawGame {
 
     public void setHostID(String host) {
         this.hostID = host;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
+    }
+
+    public String getDrawer() {
+        return drawer;
+    }
+
+    public void setDrawer(String drawer) {
+        this.drawer = drawer;
     }
 }

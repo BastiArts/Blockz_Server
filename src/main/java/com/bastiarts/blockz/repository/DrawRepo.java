@@ -18,6 +18,7 @@ public class DrawRepo {
     private List<DrawUser> users = Collections.synchronizedList(new ArrayList<>());
     private List<DrawGame> games = new ArrayList<>();
     private List<DrawGame> availableGames = new ArrayList<>();
+    private String[] topics = {"House", "Summer", "Dog"};
 
     public static DrawRepo getInstance() {
         if (instance == null) {
@@ -95,11 +96,26 @@ public class DrawRepo {
     // Chooses the Drawer once a game has started
     private DrawPlayer chooseRandomDrawer(String gameID) {
         DrawGame game = findGameByID(gameID);
-        return game.getPlayers().get(randomIndex(0, game.getPlayers().size() - 1));
+        DrawPlayer drawer = game.getPlayers().get(randomIndex(0, game.getPlayers().size() - 1));
+        game.setDrawer(drawer.getSessionID());
+        this.games.removeIf(g -> g.getGameID().equalsIgnoreCase(gameID));
+        this.games.add(game);
+        return drawer;
     }
 
+    // Simple Random
     private int randomIndex(final int from, final int to) {
         return (int) (Math.random() * ((to - from) + 1)) + from;
+    }
+
+    // Chooses a random Topic
+    private String chooseRandomTopic(String gameID) {
+        DrawGame game = findGameByID(gameID);
+        String topic = this.topics[this.randomIndex(0, this.topics.length - 1)];
+        game.setTopic(topic);
+        this.games.removeIf(g -> g.getGameID().equalsIgnoreCase(gameID));
+        this.games.add(game);
+        return topic;
     }
 
     // -- REQUEST HANDLERS --
@@ -127,7 +143,6 @@ public class DrawRepo {
                     }
                 }
 
-                // TODO Notify the join to others
                 this.notifyToGame(user, "JOIN", null);
                 System.out.println(ConsoleColor.GAME + user.getUsername() + " joined the Game " + ConsoleColor.yellow() + drl.getLobbyID() + ConsoleColor.reset());
                 break;
@@ -151,6 +166,7 @@ public class DrawRepo {
 
     // -= Game-Handler =-
     private DrawGame gameToRemove = new DrawGame("");
+
     private void handleGameRequests(DrawGameRequest dgr, Session session) {
 
         if (dgr.getType().equalsIgnoreCase("startGame")) {
@@ -170,16 +186,20 @@ public class DrawRepo {
 
     // -= Chat-Handler =-
     private void handleChatRequests(DrawChatRequest hcr, Session session) {
+        DrawUser tmpU = findUserBySession(session);
         for (DrawUser u : this.users) {
-            if (u.getGameID().equalsIgnoreCase(findUserBySession(session).getGameID())) {
-                u.getSession().getAsyncRemote().sendObject(hcr);
-               /* if(hcr.getMessage().equalsIgnoreCase(this.findGameByID(findUserBySession(session).getGameID()).getTopic())){
-                     --- TODO SEND STATUSMESSAGE mit .sendText(...);
+            if (u.getGameID().equalsIgnoreCase(tmpU.getGameID())) {
+                if (!hcr.getSender().equalsIgnoreCase(findGameByID(tmpU.getGameID()).getDrawer()) &&
+                        hcr.getMessage().equalsIgnoreCase("test")) { // this.findGameByID(tmpU.getGameID()).getTopic()
+                    this.sendStatusMessage(new StatusMessage(155, hcr.getSender() + "| has guessed the Word!"), u.getSession()); // 155 Word guessed
                     // Im DrawGame eine Variable Topic anlegen, die nach jeder Runde neu belegt wird. das Topic wird auch mitgeschickt.
                     // Topic = das zu erratene Wort
-
+                    // TODO METHODE chooseRandomTopic(GameID aufrufen, welches pro neue Runde ein neues Thema wählt!
+                    // TODO Transaction Type newRound als DrawGameRequest registrieren
                     // WICHTIG!! DAS TOPIC NUR DEM DRAWER MITSCHICKEN (SERVERSIDE -> CLIENT)
-                }*/
+                } else {
+                    u.getSession().getAsyncRemote().sendObject(hcr);
+                }
             }
         }
     }
