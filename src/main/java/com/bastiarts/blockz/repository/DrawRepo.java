@@ -17,6 +17,7 @@ public class DrawRepo {
     private static DrawRepo instance = null;
     private List<DrawUser> users = Collections.synchronizedList(new ArrayList<>());
     private List<DrawGame> games = Collections.synchronizedList(new ArrayList<>());
+    private List<DrawGame> availableGames = Collections.synchronizedList(new ArrayList<>());
 
     public static DrawRepo getInstance() {
         if (instance == null) {
@@ -129,9 +130,21 @@ public class DrawRepo {
     }
 
     // -= Game-Handler =-
+    private DrawGame gameToRemove = new DrawGame("");
     private void handleGameRequests(DrawGameRequest dgr, Session session) {
+
         if (dgr.getType().equalsIgnoreCase("startGame")) {
+            for (DrawGame dg : this.games) {
+                for (DrawPlayer dp : dg.getPlayers()) {
+                    if (dp.getSessionID().equalsIgnoreCase(session.getId())) {
+                        gameToRemove = dg;
+                        break;
+                    }
+                }
+            }
+            this.availableGames.removeIf(g -> g.getGameID().equalsIgnoreCase(gameToRemove.getGameID()));
             notifyToGame(findUserBySession(session), "START", null);
+            this.refreshGameList(session);
         }
     }
 
@@ -170,17 +183,21 @@ public class DrawRepo {
             this.users.removeIf(u -> u.getSession() == tmpU.getSession());
             this.users.add(tmpU);
             this.games.add(tmpGame);
+            availableGames = games;
             this.refreshGameList(session);
             this.notifyToGame(tmpU, "JOIN", null);
         } else {
             this.sendStatusMessage(new StatusMessage(499, "Game already exists. Try another GameID"), session);
         }
+
     }
 
     private void refreshGameList(Session session) {
         JSONObject obj = new JSONObject();
         obj.put("type", "games");
-        obj.put("games", this.games.toArray());
+
+
+        obj.put("games", this.availableGames.toArray());
         // session.getAsyncRemote().sendText(obj.toString());
 
         // Broadcast to all Users without a Game
