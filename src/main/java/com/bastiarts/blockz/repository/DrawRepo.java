@@ -174,6 +174,7 @@ public class DrawRepo {
             if (u.getGameID().equalsIgnoreCase(findUserBySession(session).getGameID())) {
                 u.getSession().getAsyncRemote().sendObject(hcr);
                /* if(hcr.getMessage().equalsIgnoreCase(this.findGameByID(findUserBySession(session).getGameID()).getTopic())){
+                     --- TODO SEND STATUSMESSAGE mit .sendText(...);
                     // Im DrawGame eine Variable Topic anlegen, die nach jeder Runde neu belegt wird. das Topic wird auch mitgeschickt.
                     // Topic = das zu erratene Wort
 
