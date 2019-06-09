@@ -31,6 +31,9 @@ public class DrawDecoder implements Decoder.Text<DrawRequest> {
             case "startGame":
                 request = new DrawGameRequest(jso.getString("type"));
                 break;
+            case "chat":
+                request = new DrawChatRequest(jso.getString("type"), jso.getString("sender"), jso.getString("message"));
+                break;
             default:
                 System.out.println("not Decode");
                 throw new DecodeException(s, "Could not decode!");

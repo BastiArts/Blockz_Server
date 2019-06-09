@@ -16,8 +16,8 @@ import java.util.List;
 public class DrawRepo {
     private static DrawRepo instance = null;
     private List<DrawUser> users = Collections.synchronizedList(new ArrayList<>());
-    private List<DrawGame> games = Collections.synchronizedList(new ArrayList<>());
-    private List<DrawGame> availableGames = Collections.synchronizedList(new ArrayList<>());
+    private List<DrawGame> games = new ArrayList<>();
+    private List<DrawGame> availableGames = new ArrayList<>();
 
     public static DrawRepo getInstance() {
         if (instance == null) {
@@ -66,22 +66,40 @@ public class DrawRepo {
         s.getAsyncRemote().sendText(new JSONObject().put("receiveSession", s.getId()).toString());
     }
 
+    // -- HELPER METHODS --
+
+    // Returns the User found by the Session
     private DrawUser findUserBySession(Session s) {
+        DrawUser tmpUser = new DrawUser(s);
         for (DrawUser du : this.users) {
             if (du.getSession() == s) {
-                return du;
+                tmpUser = du;
+                break;
             }
         }
-        return new DrawUser(s);
+        return tmpUser;
     }
 
+    // Returns the Game found by the Name
     private DrawGame findGameByID(String gameID) {
+        DrawGame tmpGame = new DrawGame("");
         for (DrawGame g : this.games) {
             if (g.getGameID().equalsIgnoreCase(gameID)) {
-                return g;
+                tmpGame = g;
+                break;
             }
         }
-        return new DrawGame(gameID);
+        return !tmpGame.getGameID().equalsIgnoreCase("") ? tmpGame : new DrawGame(gameID);
+    }
+
+    // Chooses the Drawer once a game has started
+    private DrawPlayer chooseRandomDrawer(String gameID) {
+        DrawGame game = findGameByID(gameID);
+        return game.getPlayers().get(randomIndex(0, game.getPlayers().size() - 1));
+    }
+
+    private int randomIndex(final int from, final int to) {
+        return (int) (Math.random() * ((to - from) + 1)) + from;
     }
 
     // -- REQUEST HANDLERS --
@@ -103,6 +121,8 @@ public class DrawRepo {
                         this.users.removeIf(u -> u.getSession() == user.getSession());
                         this.users.add(user);
                         g.getPlayers().add(new DrawPlayer(user.getSession().getId(), user.getUsername()));
+                        this.games.remove(g);
+                        this.games.add(g);
                         break;
                     }
                 }
@@ -150,7 +170,11 @@ public class DrawRepo {
 
     // -= Chat-Handler =-
     private void handleChatRequests(DrawChatRequest hcr, Session session) {
-
+        for (DrawUser u : this.users) {
+            if (u.getGameID().equalsIgnoreCase(findUserBySession(session).getGameID())) {
+                u.getSession().getAsyncRemote().sendObject(hcr);
+            }
+        }
     }
 
     // -= GameList-Handler =-
@@ -159,10 +183,12 @@ public class DrawRepo {
 
     }
 
+    // Sends the Status message
     private void sendStatusMessage(StatusMessage statusMessage, Session session) {
         session.getAsyncRemote().sendText(new JSONObject().put("type", "status").put("code", statusMessage.getStatusCode()).put("message", statusMessage.getStatusMessage()).toString());
     }
 
+    // Creates the Lobby of a Game
     private void createLobby(DrawLobbyRequest drl, Session session) {
         boolean exists = false;
         for (DrawGame dg : this.games) {
@@ -183,7 +209,7 @@ public class DrawRepo {
             this.users.removeIf(u -> u.getSession() == tmpU.getSession());
             this.users.add(tmpU);
             this.games.add(tmpGame);
-            availableGames = games;
+            this.availableGames.addAll(games);
             this.refreshGameList(session);
             this.notifyToGame(tmpU, "JOIN", null);
         } else {
@@ -192,6 +218,7 @@ public class DrawRepo {
 
     }
 
+    // Broadcasts all available Games to the connected Users
     private void refreshGameList(Session session) {
         JSONObject obj = new JSONObject();
         obj.put("type", "games");
@@ -207,13 +234,15 @@ public class DrawRepo {
             }
         }
     }
+
+    // Notifies Events to a specific Game
     private void notifyToGame(DrawUser user, String notifyType, DrawRequest request) {
         switch (notifyType.toUpperCase()) {
             case "JOIN":
                 for (DrawUser u : this.users) {
                     if (u.getGameID().equalsIgnoreCase(user.getGameID())) {
                         u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(findGameByID(u.getGameID()))).toString());
-                        }
+                    }
                 }
                 break;
             case "LEAVE":
@@ -226,9 +255,11 @@ public class DrawRepo {
                 this.users.removeIf(u -> u.getSession() == user.getSession());
                 break;
             case "START":
+                DrawPlayer drawPlayer = this.chooseRandomDrawer(user.getGameID());
+                System.out.println(ConsoleColor.GAME + ConsoleColor.purple() + user.getGameID() + ConsoleColor.reset() + " " + "The new Drawer is: " + ConsoleColor.green() + drawPlayer.getUsername() + ConsoleColor.reset());
                 for (DrawUser u : this.users) {
                     if (u.getGameID().equalsIgnoreCase(user.getGameID())) {
-                        u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "start").toString());
+                        u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "start").put("drawer", drawPlayer.getSessionID()).toString());
                     }
                 }
                 break;
