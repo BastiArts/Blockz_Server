@@ -127,7 +127,7 @@ public class DrawRepo {
                 this.createLobby(drl, session);
                 break;
             case "modifyLobby":
-
+                // OPTIONAL
                 break;
             case "joinLobby":
                 DrawUser user = this.findUserBySession(session);
@@ -147,6 +147,7 @@ public class DrawRepo {
                 System.out.println(ConsoleColor.GAME + user.getUsername() + " joined the Game " + ConsoleColor.yellow() + drl.getLobbyID() + ConsoleColor.reset());
                 break;
             case "leaveGame":
+                System.out.println("Leave called");
                 DrawUser us = this.findUserBySession(session);
                 for (DrawGame g : this.games) {
                     if (g.getGameID().equalsIgnoreCase(drl.getLobbyID())) {
@@ -192,10 +193,6 @@ public class DrawRepo {
         for (DrawUser u : this.users) {
             if (u.getGameID().equalsIgnoreCase(tmpU.getGameID())) {
                 DrawGame g = findGameByID(tmpU.getGameID());
-                System.out.println(g.getGameID());
-                g.setGameID("123456");
-                g = findGameByID(tmpU.getGameID());
-                System.out.println(g.getGameID());
                 if (!hcr.getSender().equalsIgnoreCase(g.getDrawer()) &&
                         hcr.getMessage().equalsIgnoreCase(g.getTopic())) { // this.findGameByID(tmpU.getGameID()).getTopic()
                     this.sendStatusMessage(new StatusMessage(155, hcr.getSender() + "| has guessed the Word!"), u.getSession()); // 155 Word guessed
@@ -280,13 +277,13 @@ public class DrawRepo {
                 }
                 break;
             case "LEAVE":
-                for (DrawUser u : this.users) {
+               /* for (DrawUser u : this.users) {
                     if (u.getGameID().equalsIgnoreCase(user.getGameID())) {
 
                         this.users.removeIf(us -> us.getSession() == user.getSession());
                         u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "leave").put("game", new JSONObject(findGameByID(u.getGameID()))).toString());
                     }
-                }
+                }*/
                 this.users.removeIf(u -> u.getSession() == user.getSession());
                 break;
             case "START":

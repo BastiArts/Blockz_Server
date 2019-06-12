@@ -28,6 +28,7 @@ public class DrawDecoder implements Decoder.Text<DrawRequest> {
                 break;
             case "leaveGame":
                 request = new DrawLobbyRequest(jso.getString("type"), jso.getString("lobbyID"));
+                break;
             case "startGame":
                 request = new DrawGameRequest(jso.getString("type"));
                 break;
