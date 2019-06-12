@@ -189,8 +189,13 @@ public class DrawRepo {
         DrawUser tmpU = findUserBySession(session);
         for (DrawUser u : this.users) {
             if (u.getGameID().equalsIgnoreCase(tmpU.getGameID())) {
-                if (!hcr.getSender().equalsIgnoreCase(findGameByID(tmpU.getGameID()).getDrawer()) &&
-                        hcr.getMessage().equalsIgnoreCase("test")) { // this.findGameByID(tmpU.getGameID()).getTopic()
+                DrawGame g = findGameByID(tmpU.getGameID());
+                System.out.println(g.getGameID());
+                g.setGameID("123456");
+                g = findGameByID(tmpU.getGameID());
+                System.out.println(g.getGameID());
+                if (!hcr.getSender().equalsIgnoreCase(g.getDrawer()) &&
+                        hcr.getMessage().equalsIgnoreCase(g.getTopic())) { // this.findGameByID(tmpU.getGameID()).getTopic()
                     this.sendStatusMessage(new StatusMessage(155, hcr.getSender() + "| has guessed the Word!"), u.getSession()); // 155 Word guessed
                     // Im DrawGame eine Variable Topic anlegen, die nach jeder Runde neu belegt wird. das Topic wird auch mitgeschickt.
                     // Topic = das zu erratene Wort
@@ -289,6 +294,7 @@ public class DrawRepo {
                         u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "start").put("drawer", drawPlayer.getSessionID()).toString());
                     }
                 }
+                this.chooseRandomTopic(user.getGameID());
                 break;
             default:
                 break;
