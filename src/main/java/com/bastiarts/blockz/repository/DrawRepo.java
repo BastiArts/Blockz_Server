@@ -155,6 +155,8 @@ public class DrawRepo {
                         break;
                     }
                 }
+                this.availableGames.clear();
+                this.availableGames.addAll(this.games);
                 this.notifyToGame(us, "LEAVE", null);
                 System.out.println(ConsoleColor.GAME + findUserBySession(session).getUsername() + ConsoleColor.red() + " left the Game " + ConsoleColor.yellow() + drl.getLobbyID() + ConsoleColor.reset());
                 break;
@@ -251,7 +253,7 @@ public class DrawRepo {
         obj.put("type", "games");
 
 
-        obj.put("games", this.availableGames.toArray());
+        obj.put("games", this.availableGames.stream().filter(e -> e.getPlayers().size() != 0).toArray());
         // session.getAsyncRemote().sendText(obj.toString());
 
         // Broadcast to all Users without a Game
@@ -275,8 +277,9 @@ public class DrawRepo {
             case "LEAVE":
                 for (DrawUser u : this.users) {
                     if (u.getGameID().equalsIgnoreCase(user.getGameID())) {
+
                         this.users.removeIf(us -> us.getSession() == user.getSession());
-                        u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "join").put("game", new JSONObject(findGameByID(u.getGameID()))).toString());
+                        u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "leave").put("game", new JSONObject(findGameByID(u.getGameID()))).toString());
                     }
                 }
                 this.users.removeIf(u -> u.getSession() == user.getSession());
