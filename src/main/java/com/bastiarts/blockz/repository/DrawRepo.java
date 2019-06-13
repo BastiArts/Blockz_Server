@@ -81,6 +81,18 @@ public class DrawRepo {
         return tmpUser;
     }
 
+    // Returns the User found by the SessionID
+    private DrawUser findUserBySessionID(String s) {
+        DrawUser tmpUser = new DrawUser(); // MAYBE THROWS NULL LATER ON BECAUSE NO SESSION IS SET
+        for (DrawUser du : this.users) {
+            if (du.getSession().getId().equalsIgnoreCase(s)) {
+                tmpUser = du;
+                break;
+            }
+        }
+        return tmpUser;
+    }
+
     // Returns the Game found by the Name
     private DrawGame findGameByID(String gameID) {
         DrawGame tmpGame = new DrawGame("");
@@ -158,8 +170,9 @@ public class DrawRepo {
                 }
                 this.availableGames.clear();
                 this.availableGames.addAll(this.games);
-                this.notifyToGame(us, "LEAVE", null);
+                refreshGameList(session);
                 System.out.println(ConsoleColor.GAME + findUserBySession(session).getUsername() + ConsoleColor.red() + " left the Game " + ConsoleColor.yellow() + drl.getLobbyID() + ConsoleColor.reset());
+                this.notifyToGame(us, "LEAVE", null);
                 break;
             default:
                 break;
@@ -284,7 +297,7 @@ public class DrawRepo {
                         u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "leave").put("game", new JSONObject(findGameByID(u.getGameID()))).toString());
                     }
                 }*/
-                this.users.removeIf(u -> u.getSession() == user.getSession());
+                // this.users.removeIf(u -> u.getSession() == user.getSession());
                 break;
             case "START":
                 DrawPlayer drawPlayer = this.chooseRandomDrawer(user.getGameID());
@@ -294,7 +307,8 @@ public class DrawRepo {
                         u.getSession().getAsyncRemote().sendText(new JSONObject().put("type", "start").put("drawer", drawPlayer.getSessionID()).toString());
                     }
                 }
-                this.chooseRandomTopic(user.getGameID());
+                // SEND THE TOPIC TO THE DRAWER
+                findUserBySessionID(drawPlayer.getSessionID()).getSession().getAsyncRemote().sendText(new JSONObject().put("type", "topic").put("topic", this.chooseRandomTopic(user.getGameID())).toString());
                 break;
             default:
                 break;

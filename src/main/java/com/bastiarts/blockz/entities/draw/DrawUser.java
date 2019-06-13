@@ -7,6 +7,9 @@ public class DrawUser {
     private Session session;
     private String gameID = "";
 
+    public DrawUser() {
+    }
+
     public DrawUser(Session session) {
         this.session = session;
     }
