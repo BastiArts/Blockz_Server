@@ -159,7 +159,6 @@ public class DrawRepo {
                 System.out.println(ConsoleColor.GAME + user.getUsername() + " joined the Game " + ConsoleColor.yellow() + drl.getLobbyID() + ConsoleColor.reset());
                 break;
             case "leaveGame":
-                System.out.println("Leave called");
                 DrawUser us = this.findUserBySession(session);
                 for (DrawGame g : this.games) {
                     if (g.getGameID().equalsIgnoreCase(drl.getLobbyID())) {
@@ -197,6 +196,17 @@ public class DrawRepo {
             this.availableGames.removeIf(g -> g.getGameID().equalsIgnoreCase(gameToRemove.getGameID()));
             notifyToGame(findUserBySession(session), "START", null);
             this.refreshGameList(session);
+        } else if (dgr.getType().equalsIgnoreCase("updateGame")) {
+            for (DrawGame g : this.games) {
+                if (g.getGameID().equalsIgnoreCase(dgr.getGameID())) {
+                    for (DrawPlayer p : g.getPlayers()) {
+                        DrawUser du = findUserBySessionID(p.getSessionID());
+                        if (du != findUserBySession(session)) {
+                            du.getSession().getAsyncRemote().sendObject(dgr);
+                        }
+                    }
+                }
+            }
         }
     }
 
