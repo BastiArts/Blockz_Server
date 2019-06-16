@@ -14,6 +14,7 @@ public class DrawDecoder implements Decoder.Text<DrawRequest> {
         DrawRequest request;
         switch (jso.getString("type")) {
             case "login":
+                // Example: {"type": "login", "username": "Basti"}
                 request = new DrawLoginRequest(jso.getString("type"), jso.getString("username"));
                 break;
             case "getGames":
@@ -30,6 +31,7 @@ public class DrawDecoder implements Decoder.Text<DrawRequest> {
                 request = new DrawLobbyRequest(jso.getString("type"), jso.getString("lobbyID"));
                 break;
             case "startGame":
+                // Example Request: {"type": "startGame"}
                 request = new DrawGameRequest(jso.getString("type"));
                 break;
             case "chat":
@@ -38,6 +40,9 @@ public class DrawDecoder implements Decoder.Text<DrawRequest> {
             case "updateGame":
                 request = new DrawGameRequest(jso.getString("type"), jso.getString("game"),
                         jso.getDouble("x"), jso.getDouble("y"), jso.getDouble("z"), jso.getString("mode"), jso.getString("color"));
+                break;
+            case "nextRound":
+                request = new DrawGameRequest(jso.getString("type"));
                 break;
             default:
                 System.out.println("not Decode");

@@ -167,6 +167,7 @@ public class DrawRepo {
                         break;
                     }
                 }
+                this.games.removeIf(ga -> ga.getPlayers().size() < 1);
                 this.availableGames.clear();
                 this.availableGames.addAll(this.games);
                 refreshGameList(session);
@@ -207,6 +208,8 @@ public class DrawRepo {
                     }
                 }
             }
+        } else if (dgr.getType().equalsIgnoreCase("nextRound")) {
+            notifyToGame(findUserBySession(session), "START", null);
         }
     }
 
@@ -218,7 +221,11 @@ public class DrawRepo {
                 DrawGame g = findGameByID(tmpU.getGameID());
                 if (!hcr.getSender().equalsIgnoreCase(g.getDrawer()) &&
                         hcr.getMessage().equalsIgnoreCase(g.getTopic())) { // this.findGameByID(tmpU.getGameID()).getTopic()
+                    // TODO W.I.P - Save the guesses
                     this.sendStatusMessage(new StatusMessage(155, hcr.getSender() + "| has guessed the Word!"), u.getSession()); // 155 Word guessed
+                    if (!g.getGuessedRight().contains(hcr.getSender()) || g.getGuessedRight().size() < 1) {
+                        g.getGuessedRight().add(hcr.getSender());
+                    }
                     // Im DrawGame eine Variable Topic anlegen, die nach jeder Runde neu belegt wird. das Topic wird auch mitgeschickt.
                     // Topic = das zu erratene Wort
                     // TODO METHODE chooseRandomTopic(GameID aufrufen, welches pro neue Runde ein neues Thema wählt!
