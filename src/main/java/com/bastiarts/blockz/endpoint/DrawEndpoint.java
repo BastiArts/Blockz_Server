@@ -1,35 +1,30 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.bastiarts.blockz.endpoint;
 
-import com.bastiarts.blockz.entities.BlockzUser;
-import com.bastiarts.blockz.repository.BlockzRepo;
+import com.bastiarts.blockz.decoder.DrawDecoder;
+import com.bastiarts.blockz.encoder.DrawEncoder;
+import com.bastiarts.blockz.entities.draw.Requests.DrawRequest;
+import com.bastiarts.blockz.repository.DrawRepo;
 import com.bastiarts.blockz.util.ConsoleColor;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 
-
-@ServerEndpoint("/blockz")
-public class GameEndpoint {
-    private BlockzRepo repo = BlockzRepo.getInstance();
+@ServerEndpoint(value = "/draw", encoders = DrawEncoder.class, decoders = DrawDecoder.class)
+public class DrawEndpoint {
+    DrawRepo drawRepo = DrawRepo.getInstance();
 
     @OnOpen
     public void onOpen(Session session) throws IOException {
-        this.repo.addUser(new BlockzUser(session));
+        this.drawRepo.addUser(session);
         System.out.println(ConsoleColor.yellow() + session.getId() + ConsoleColor.green() + " connected" + ConsoleColor.reset());
     }
 
     @OnMessage
-    public void handleRequests(String request, Session session) {
+    public void handleRequests(DrawRequest request, Session session) {
         try {
-            this.repo.handleRequest(new JSONObject(request), session);
+            this.drawRepo.handleRequest(request, session);
         } catch (JSONException e) {
             System.out.println(ConsoleColor.SERVER + "Invalid JSON Format!");
             e.printStackTrace();
@@ -43,7 +38,7 @@ public class GameEndpoint {
 
     @OnClose
     public void onClose(Session session) {
-        this.repo.removeUser(session);
+        this.drawRepo.removeUser(session);
         System.out.println(ConsoleColor.SERVER + session.getId() + " Connection closed...");
     }
 }
